@@ -50,8 +50,8 @@ silver_relation_table = spark.read.format('delta').table('silver_relation_data')
 def make_dgl_graph(relation_table) -> dgl.DGLGraph:
     """
     Make a Graph object within DGL using src_id and dst_id from table encoding graph
-    Nodes: Companies with unique src_id or dst_id
-    Edges: Company A (with src_id) --> buys_from --> Company B (with dst_id)
+    Nodes: Patients and Providers with unique src_id or dst_id
+    Edges: Patient A (with src_id) --> consumes_services_from --> Provider B (with dst_id)
     """
     triplets = [(x.src_id, x.dst_id) for x in relation_table.select("src_id", "dst_id").collect()]
     return dgl.graph(triplets)
@@ -480,9 +480,9 @@ class GNNWrapper(mlflow.pyfunc.PythonModel):
   def predict(self, context, model_input):
     # Create a graph structure with the model_input
     if isinstance(model_input, pd.DataFrame):
-      source_company_id = np.array([x for x in model_input['src_id'].values])
-      destination_company_id = np.array([x for x in model_input['dst_id'].values])
-      g = dgl.graph((source_company_id, destination_company_id))
+      source_id = np.array([x for x in model_input['src_id'].values])
+      destination_id = np.array([x for x in model_input['dst_id'].values])
+      g = dgl.graph((source_id, destination_id))
     else: 
       g = make_dgl_graph(model_input)
     
