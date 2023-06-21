@@ -65,7 +65,7 @@ bronze_relation_data.writeStream\
 
 # MAGIC %md-sandbox
 # MAGIC ### 3.1.1 Quickly viewing our Data
-# MAGIC Let's print out the tables that we are going to be using throughout this blog. We will use these tables to generate our dashboard to view our provider network. The only table used during training of the GNN will be the streamed procurement information, the remaining tables will be used to generate the risk dashboard. Also note that edges in the supply chain graph from _bronze_relation_data_ would be Patient (node) \\( \rightarrow  \\) Provider (node). Iteratively building these edge bunches reveals the entire provider network graph.
+# MAGIC Let's print out the tables that we are going to be using throughout this blog. We will use these tables to generate our dashboard to view our provider network. The only table used during training of the GNN will be the streamed procurement information, the remaining tables will be used to generate the risk dashboard. Also note that edges in the provider network graph from _bronze_relation_data_ would be Patient (node) \\( \rightarrow  \\) Provider (node). Iteratively building these edge bunches reveals the entire provider network graph.
 
 # COMMAND ----------
 
