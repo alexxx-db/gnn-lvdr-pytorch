@@ -56,12 +56,12 @@ def make_dgl_graph(relation_table) -> dgl.DGLGraph:
     triplets = [(x.src_id, x.dst_id) for x in relation_table.select("src_id", "dst_id").collect()]
     return dgl.graph(triplets)
 
-supplier_graph = make_dgl_graph(relation_table=silver_relation_table)
+provider_graph = make_dgl_graph(relation_table=silver_relation_table)
 
 # COMMAND ----------
 
 # DBTITLE 1,We can inspect our graph to see the number of edges and nodes
-supplier_graph
+provider_graph
 
 # COMMAND ----------
 
@@ -394,7 +394,7 @@ params_hyperopt = {**params_hyperopt, **static_params}
 
 # DBTITLE 1,We will use HyperOpt to search the GNN and graph-sampling parameter space
 # Let's create a static training, validation, and testing set of graphs
-graph_partitions = make_graph_partitions(graph=supplier_graph, params=params)
+graph_partitions = make_graph_partitions(graph=provider_graph, params=params)
 
 def train_and_evaluate_gnn(params_hyperopt: Dict[str, Any]) -> Dict[str, Any]:
   # New set of data loaders given the parameter set
