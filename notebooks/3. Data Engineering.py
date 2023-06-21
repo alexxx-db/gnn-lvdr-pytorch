@@ -45,7 +45,7 @@ full_data_path = f"dbfs:/FileStore/{data_path}/"
 
 # COMMAND ----------
 
-# DBTITLE 1,Defining as streaming source (our streaming landing zone) and destination, a delta table called bronze_company_data
+# DBTITLE 1,Defining as streaming source (our streaming landing zone) and destination, a delta table called bronze_patient_provider_data
 bronze_relation_data = spark.readStream\
                          .format("cloudFiles")\
                          .option("cloudFiles.format", "json")\
@@ -65,17 +65,17 @@ bronze_relation_data.writeStream\
 
 # MAGIC %md-sandbox
 # MAGIC ### 3.1.1 Quickly viewing our Data
-# MAGIC Let's print out the tables that we are going to be using throughout this blog. We will use these tables to generate our dashboard to view our provider network. The only table used during training of the GNN will be the streamed procurement information, the remaining tables will be used to generate the risk dashboard. Also note that edges in the provider network graph from _bronze_relation_data_ would be Patient (node) \\( \rightarrow  \\) Provider (node). Iteratively building these edge bunches reveals the entire provider network graph.
+# MAGIC Let's print out the tables that we are going to be using throughout this blog. We will use these tables to generate our dashboard to view our provider network. The only table used during training of the GNN will be the streamed procurement information, the remaining tables will be used to generate the recommendations dashboard. Also note that edges in the provider network graph from _bronze_relation_data_ would be Patient (node) \\( \rightarrow  \\) Provider (node). Iteratively building these edge bunches reveals the entire provider network graph.
 
 # COMMAND ----------
 
 # DBTITLE 1,Bronze collected procurement data 
-bronze_company_data = spark.read.table("bronze_relation_data")
-display(bronze_company_data)
+bronze_patient_data = spark.read.table("bronze_relation_data")
+display(bronze_patient_data)
 
 # COMMAND ----------
 
-# DBTITLE 1,Read our finance tables and register them into our Database
+# DBTITLE 1,Read our tables and register them into our Database
 # Read from CSV file and save as Delta
 def read_and_write_to_db(table_name: str) -> None:
   (spark.read\
@@ -85,24 +85,24 @@ def read_and_write_to_db(table_name: str) -> None:
         .csv(f"dbfs:/FileStore/{data_path}/finance_data/{table_name}.csv")\
         .write.format("delta").mode("overwrite").saveAsTable(table_name))
 
-read_and_write_to_db("company_risk_data")
-read_and_write_to_db("company_locations")
-read_and_write_to_db("company_risk_frame")
+read_and_write_to_db("patient_score_data")
+read_and_write_to_db("provider_locations")
+read_and_write_to_db("patient_score_frame")
 
 # COMMAND ----------
 
-# DBTITLE 1,Country risk premiums (please note this data is randomised for demo purposes)
-display(spark.table("company_risk_data"))
+# DBTITLE 1,Patient score premiums (please note this data is randomised for demo purposes)
+display(spark.table("patient_score_data"))
 
 # COMMAND ----------
 
-# DBTITLE 1,Locations of companies
-display(spark.table("company_locations"))
+# DBTITLE 1,Locations of patients
+display(spark.table("patient_locations"))
 
 # COMMAND ----------
 
-# DBTITLE 1,Risk factors associated to companies (again, these are randomised for demo purposes)
-display(spark.table("company_risk_frame"))
+# DBTITLE 1,Score factors associated to patients (again, these are randomised for demo purposes)
+display(spark.table("patient_score_frame"))
 
 # COMMAND ----------
 
@@ -110,7 +110,7 @@ display(spark.table("company_risk_frame"))
 # MAGIC ### 3.1.2 Some Quick Data Engineering
 # MAGIC There are two pieces of data engineering required for this raw Bronze data:
 # MAGIC 1. Our ingestion scheme provides a probability and we do not want to train our GNN on low probability links so we will remove below a threshold.
-# MAGIC 1. We notice that raw company names have postfixes (e.g Ltd., LLC) denoting different legal entities but pointing to the same physical company. 
+# MAGIC 1. We notice that raw provider names have postfixes denoting different legal entities but pointing to the same physical provider. 
 
 # COMMAND ----------
 
@@ -154,7 +154,7 @@ display(spark.table("silver_relation_data"))
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Next, we will use this Silver data to train our GNN and refine the low likelihood links that we omitted going from Bronze to Silver. The GNN will be trained on relatively confident links in the next notbook.
+# MAGIC Next, we will use this Silver data to train our GNN and refine the low likelihood links that we omitted going from Bronze to Silver. The GNN will be trained on relatively confident links in the next notebook.
 
 # COMMAND ----------
 
