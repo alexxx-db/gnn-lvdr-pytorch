@@ -1,4 +1,4 @@
-Using MLflow to deploy Graph Neural Networks for Patient Recommendations
+Using MLflow to deploy Graph Neural Networks for Patient Recommendations, leveraging geospatial data, patient-provider relationship graphs and OMOP CDM data together with PyTorch and GraphSAGE.
 
 ## Architecture
 
