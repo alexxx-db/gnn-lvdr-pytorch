@@ -1,8 +1,75 @@
-Using MLflow to deploy Graph Neural Networks for Patient Recommendations, leveraging geospatial data, patient-provider relationship graphs and OMOP CDM data together with PyTorch and GraphSAGE.
+# GNN Patient Recommendations with Databricks
+
+Graph Neural Network-based patient-to-care-site recommendations using GraphSAGE, synthetic OMOP clinical data, geospatial intelligence, MLflow observability, and an Agentic AI explainability layer — all on Databricks.
 
 ## Architecture
 
-<img src="https://github.com/alexxx-db/gnn-lvdr-pytorch/blob/main/images/architecture_including_ml.png?raw=True" width=1500px alt="graph-structured-data">
+<img src="https://github.com/alexxx-db/gnn-lvdr-pytorch/blob/main/images/architecture_including_ml.png?raw=True" width="100%" alt="architecture">
 
-## Project support
-Please note that this project is provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs). This is provided AS-IS and we do not make any guarantees of any kind. Please do not submit a support ticket relating to any issues arising from the use of this project.
+## Quick Start
+
+### Option 1: Sequential notebook execution
+1. Import this repo into a Databricks Git folder
+2. Run notebooks `01` through `12` in order from `notebooks/`
+
+### Option 2: Automated workflow
+1. Import this repo into a Databricks Git folder
+2. Open `notebooks/RUNME.py` and run it to create the Databricks job
+3. Click "Run Now" on the created job
+
+## What This Project Does
+
+1. **Generates synthetic OMOP-aligned healthcare data** — patients, care sites, providers, visits, conditions, drugs, procedures, and geospatial coordinates (dbldatagen)
+2. **Curates gold-layer feature tables** — patient clinical summaries and care-site utilization profiles
+3. **Constructs a patient-care-site graph** — from visit, condition, treatment, and proximity edges
+4. **Trains a GraphSAGE link prediction model** — two-layer SAGEConv encoder with MLP edge predictor
+5. **Generates top-k recommendations** — ranked care sites per patient with enriched metadata
+6. **Explains recommendations via an agent pipeline** — structured natural-language explanations grounded in clinical and geospatial data
+7. **Provides a Gradio-based Databricks App** — interactive patient selection, recommendation viewing, and explanation
+
+## Repository Structure
+
+```
+notebooks/          Thin orchestration notebooks (00-12 + RUNME)
+src/
+  config/           Centralized configuration and UC naming
+  data_generation/  Synthetic OMOP + geospatial generators
+  omop/             Schema definitions, transforms, validators
+  graph/            Graph construction, GraphSAGE model, inference, ranking
+  mlops/            MLflow tracking, evaluation, registry, tracing
+  agentic/          Agent config, tools, orchestration, explainability
+  app/              Gradio Databricks App frontend
+docs/               Architecture, assumptions, runbook
+tests/              Unit tests for config, graph, validators, ranking
+resources/          App YAML, workflow configs
+```
+
+## Technology Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Graph Neural Network | DGL + PyTorch (GraphSAGE) |
+| Data Generation | dbldatagen |
+| Data Platform | Databricks + Unity Catalog + Delta Lake |
+| Experiment Tracking | MLflow |
+| Agent Explainability | Agent Bricks pattern |
+| Frontend | Gradio + Databricks Apps |
+
+## Configuration
+
+All parameters are centralized in `src/config/settings.py` and exposed via notebook widgets. Key settings:
+
+- `catalog` / `schema`: Unity Catalog namespace
+- `synthetic_scale`: Number of synthetic patients (1000 default)
+- `rebuild_synthetic` / `retrain_model`: Toggle regeneration/retraining
+- `num_epochs`, `lr`, `aggregator_type`: GraphSAGE hyperparameters
+
+See [docs/runbook.md](docs/runbook.md) for complete configuration reference.
+
+## Project Support
+
+This project is provided for exploration and demonstration purposes. It is not formally supported by Databricks with Service Level Agreements (SLAs). Provided AS-IS.
+
+## License
+
+See [LICENSE](LICENSE).

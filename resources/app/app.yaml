@@ -1,0 +1,10 @@
+command:
+  - python
+  - src/app/gradio_app.py
+env:
+  - name: APP_CATALOG
+    value: gnn_hls_graphsage
+  - name: APP_SCHEMA
+    value: gnn_hls_graphsage_db
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: "{{DATABRICKS_WAREHOUSE_ID}}"
