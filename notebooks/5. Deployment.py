@@ -35,28 +35,29 @@ _ = spark.sql(f"use {catalog_name}.{database_name};")
 
 # COMMAND ----------
 
-# DBTITLE 1,For the sake of simplicity, we promote latest version to production
+# DBTITLE 1,For the sake of simplicity, we promote latest version to champion
 from mlflow import MlflowClient
 
+mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
-model_name = "patient_recommendations_gnn_model_alex_barreto"
-model_version = int(client.get_latest_versions(model_name)[0].version)
+model_name = f"{catalog_name}.{database_name}.patient_recommendations_gnn_model"
+model_version = client.get_model_version_by_alias(model_name, "champion").version if False else \
+    max(mv.version for mv in client.search_model_versions(f"name='{model_name}'"))
 
 # Latest registered model
 registered_model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{model_version}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Transition our registered model into production
-#                                                                               New stage
-#                                                    Previous version           |
-#                                                         |                     |
-client.transition_model_version_stage(model_name, model_version, stage="Production", archive_existing_versions=True)
+# DBTITLE 1,Set champion alias on our registered model
+#                                                    Model name       Alias         Version
+#                                                         |              |              |
+client.set_registered_model_alias(model_name, "champion", model_version)
 
 # COMMAND ----------
 
-# DBTITLE 1,Create a UDF from the production version of our GNN model
-get_gnn_prediction = mlflow.pyfunc.spark_udf(spark, f"models:/{model_name}/production", env_manager="local")
+# DBTITLE 1,Create a UDF from the champion version of our GNN model
+get_gnn_prediction = mlflow.pyfunc.spark_udf(spark, f"models:/{model_name}@champion", env_manager="local")
 
 # COMMAND ----------
 
@@ -64,7 +65,7 @@ get_gnn_prediction = mlflow.pyfunc.spark_udf(spark, f"models:/{model_name}/produ
 from pyspark.sql.functions import col, struct
 
 # Read in our silver table
-silver_relation_table = spark.read.format('delta').table('silver_relation_data')
+silver_relation_table = spark.table('silver_relation_data')
 
 # Create our gold table based on the GNN predictions
 gold_table_with_pred = silver_relation_table.withColumn("gnn_prediction", get_gnn_prediction(struct(*silver_relation_table.columns)))
@@ -86,7 +87,7 @@ gold_table_with_pred.write.format("delta").mode("overwrite").saveAsTable('gold_r
 # DBTITLE 1,Finally, update the gold table with the outputs from our GNN model - more links!
 from pyspark.sql.functions import when, col
 
-gold_with_predictions = spark.read.format("delta").table("gold_relations_table_with_predictions")
+gold_with_predictions = spark.table("gold_relations_table_with_predictions")
 
 # Change the probability column accoridng to the gnn outputs
 gold_relations = gold_with_predictions\

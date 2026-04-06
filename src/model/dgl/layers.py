@@ -45,7 +45,7 @@ class GraphSAGE(nn.Module):
                             if l != self.n_layers - 1
                             else self.out_feats)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
-            dataloader = dgl.dataloading.NodeDataLoader(
+            dataloader = dgl.dataloading.DataLoader(
                 g, torch.arange(g.number_of_nodes()), sampler,
                 batch_size=batch_size,
                 shuffle=True,

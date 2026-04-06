@@ -99,7 +99,7 @@ def make_graph_partitions(graph: dgl.DGLGraph,
 
 # DBTITLE 1,Create Data Loaders in the form of edges (positive and negative) since we are performing Link Prediction
 def get_edge_dataloaders(graph_partitions: Dict[str, dgl.DGLGraph], 
-                         params: Dict[str, Any]) -> (Dict[str, dgl.dataloading.EdgeDataLoader],
+                         params: Dict[str, Any]) -> (Dict[str, dgl.dataloading.DataLoader],
                                                      Dict[str, dgl.DGLGraph],
                                                      dgl.DGLGraph):
     """
@@ -122,7 +122,7 @@ def get_edge_dataloaders(graph_partitions: Dict[str, dgl.DGLGraph],
         )
 
         # Create the data loader based on the sampler and negative sampler
-        data_loaders[split] = dgl.dataloading.EdgeDataLoader(
+        data_loaders[split] = dgl.dataloading.DataLoader(
             graph_partitions[split],
             graph_partitions[split].edges(form='eid'),
             sampler,
@@ -202,7 +202,7 @@ class GraphSAGE(nn.Module):
                             if l != self.n_layers - 1
                             else self.out_feats)
             sampler = dgl.dataloading.MultiLayerFullNeighborSampler(1)
-            dataloader = dgl.dataloading.NodeDataLoader(
+            dataloader = dgl.dataloading.DataLoader(
                 g, torch.arange(g.number_of_nodes()), sampler,
                 batch_size=batch_size,
                 shuffle=True,
@@ -265,7 +265,7 @@ graph_model
 # DBTITLE 1,We define a trainer class for training the Model defined above
 class Trainer(object):
     def __init__(self, params: Dict[str, Any], model: torch.nn.Module,
-                 train_data_loader: dgl.dataloading.EdgeDataLoader,
+                 train_data_loader: dgl.dataloading.DataLoader,
                  training_graph: dgl.DGLGraph):
         self.params = params
         self.model = model
@@ -345,7 +345,7 @@ class Trainer(object):
 
 # DBTITLE 1,Define an evaluator which samples subgraphs in the validation graph and returns average ROC across the sampled subgraphs
 def evaluate(trained_model: torch.nn.Module,
-             validation_data_loader: dgl.dataloading.EdgeDataLoader) -> (List, List):
+             validation_data_loader: dgl.dataloading.DataLoader) -> (List, List):
   trained_model.eval()
   roc_auc_sugraphs = []
   ap_sugraphs = []
@@ -574,7 +574,9 @@ print(gnn_model_pyfunc.test())
 
 # COMMAND ----------
 
-mlflow.register_model('runs:/' + run_id + '/gnn_model', 'patient_recommendations_gnn_model_alex_barreto')
+mlflow.set_registry_uri("databricks-uc")
+uc_model_name = f"{catalog_name}.{database_name}.patient_recommendations_gnn_model"
+mlflow.register_model('runs:/' + run_id + '/gnn_model', uc_model_name)
 
 # COMMAND ----------
 

@@ -7,25 +7,21 @@ import torch.nn.functional as F
 from torch.nn import Sigmoid
 from torch import cat, ones, zeros
 from typing import Dict, Any
-from model.dgl.StochasticGCN import ScorePredictor
 from utils import plot_tsne_embeddings, compute_auc_ap
 import mlflow
 import mlflow.pytorch
-from mlflow.tracking import MlflowClient
 
 
 class Trainer(object):
     def __init__(self,
                  params: Dict[str, Any],
                  model: torch.nn.Module,
-                 train_data_loader: dgl.dataloading.EdgeDataLoader,
-                 validation_data_loader: dgl.dataloading.EdgeDataLoader,
+                 train_data_loader: dgl.dataloading.DataLoader,
                  training_graph: dgl.DGLGraph):
         self.params = params
         self.model = model
         self.training_graph = training_graph
         self.train_data_loader = train_data_loader
-        self.predictor = ScorePredictor().to(self.params['device'])
         self.opt = None
         self.sigmoid = Sigmoid()
 
@@ -76,7 +72,7 @@ class Trainer(object):
             for step, (input_nodes, positive_graph, negative_graph,
                        blocks) in enumerate(tq):
                 # For transferring to CUDA
-                if self.params['device'] == 'gpu':
+                if self.params['device'] == 'cuda':
                     blocks = [b.to(torch.device('cuda')) for b in blocks]
                     positive_graph = positive_graph.to(torch.device('cuda'))
                     negative_graph = negative_graph.to(torch.device('cuda'))
@@ -114,4 +110,3 @@ class Trainer(object):
         self.model.train()
         self.train_epochs()
         return self.model
-

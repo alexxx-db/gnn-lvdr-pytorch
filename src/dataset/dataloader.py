@@ -7,9 +7,8 @@ from typing import Dict
 class DataLoader(object):
     def __init__(self, params, spark):
         self.params = params
-        self.company_table = (
-            spark.read.format('delta').table('buys_relations_table')
-        )
+        table_name = params.get('relation_table', 'silver_relation_data')
+        self.company_table = spark.table(table_name)
 
         self.graph = None
         self.training_graph = None
@@ -59,7 +58,7 @@ class DataLoader(object):
                 'validation': self.validation_graph,
                 'testing': self.testing_graph}
 
-    def get_edge_dataloaders(self) -> (Dict[str, dgl.dataloading.EdgeDataLoader],
+    def get_edge_dataloaders(self) -> (Dict[str, dgl.dataloading.DataLoader],
                                        Dict[str, dgl.DGLGraph],
                                        dgl.DGLGraph):
         """
@@ -85,7 +84,7 @@ class DataLoader(object):
             )
 
             # Create the data loader based on the sampler and negative sampler
-            data_loaders[split] = dgl.dataloading.EdgeDataLoader(
+            data_loaders[split] = dgl.dataloading.DataLoader(
                 graph_partitions[split],
                 graph_partitions[split].edges(form='eid'),
                 sampler,
@@ -94,11 +93,6 @@ class DataLoader(object):
                 batch_size=self.params['batch_size'],
                 shuffle=True,
                 drop_last=False,
-                pin_memory=True,
                 num_workers=self.params['num_workers'])
 
         return data_loaders, graph_partitions, self.graph
-
-
-
-

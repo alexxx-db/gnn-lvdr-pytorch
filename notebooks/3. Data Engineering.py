@@ -115,7 +115,7 @@ display(spark.table("patient_score_frame"))
 # COMMAND ----------
 
 # DBTITLE 1,1. We note that the data set includes low likelihood pairs which should not be used during training
-draw_probability_distribution(bronze_company_data, probability_col='probability')
+draw_probability_distribution(bronze_patient_data, probability_col='probability')
 
 # COMMAND ----------
 

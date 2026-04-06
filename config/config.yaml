@@ -1,4 +1,6 @@
-database: 'ajmal_aziz_gnn_blog'
+catalog: 'gnn_hls_graphsage'
+schema: 'gnn_hls_graphsage_db'
+relation_table: 'silver_relation_data'
 device: 'cpu'
 
 

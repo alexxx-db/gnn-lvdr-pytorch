@@ -1,5 +1,6 @@
 import dgl
 import logging
+import os
 import torch
 from model.dgl.StochasticGCN import Model
 import matplotlib.pyplot as plt
@@ -13,10 +14,6 @@ import numpy as np
 
 
 def create_model(params):
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # in_features, hidden_features, out_features, num_classes,
-    # etypes):
-
     model = Model(in_features=params['num_node_features'],
                   hidden_features=params['num_hidden_graph_layers'],
                   out_features=params['num_node_features'],
@@ -43,10 +40,10 @@ def compute_auc_ap(pos_score, neg_score) -> Dict[str, Any]:
 
 
 def plot_tsne_embeddings(graph_embeddings: torch.Tensor,
-                         chart_name: str,
-                         save_fig: bool) -> None:
+                         chart_name: str = 'training_embeddings',
+                         save_fig: bool = False):
     """
-    Plots t_sne_embeddings
+    Plots t_sne_embeddings. Returns the figure object for mlflow.log_figure().
     """
     # Due to the large size, only plot about ~30% of the embeddings
     indices = np.random.choice(range(graph_embeddings.shape[0]),
@@ -65,6 +62,7 @@ def plot_tsne_embeddings(graph_embeddings: torch.Tensor,
     plt.ylabel('Dimension 2')
     plt.title(f't-SNE Results for {chart_name}')
     if save_fig:
+        os.makedirs('data', exist_ok=True)
         plt.savefig(f'data/{chart_name}.png', bbox_inches='tight')
-    plt.show()
     plt.close()
+    return fig

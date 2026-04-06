@@ -7,20 +7,20 @@ import tqdm
 try:
   import cleanco
 except ModuleNotFoundError:
-  !pip install cleanco
+  %pip install cleanco
 import cleanco
 from warnings import simplefilter
 from typing import Dict, Any, List
 
 # Graph machine learning:
-!pip install dgl
+%pip install dgl
 
 # Uncomment below if you want to run on GPU
-# !pip install -U spacy
-# !pip install -U thinc
-# !pip install -U pydantic
-# !pip install dgl-cu113 dglgo -f https://data.dgl.ai/wheels/repo.html
-# !pip install dgl-cu113 dglgo -f https://data.dgl.ai/wheels/repo.html
+# %pip install -U spacy
+# %pip install -U thinc
+# %pip install -U pydantic
+# %pip install dgl-cu113 dglgo -f https://data.dgl.ai/wheels/repo.html
+# %pip install dgl-cu113 dglgo -f https://data.dgl.ai/wheels/repo.html
 
 import dgl
 import numpy as np

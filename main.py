@@ -1,19 +1,25 @@
 import argparse
 import logging
+import sys
 import yaml
-from pyspark.sql import SparkSession
-from pyspark.dbutils import DBUtils
 from pathlib import Path
 from warnings import simplefilter
+
+from pyspark.sql import SparkSession
+
+import torch
+import mlflow.pytorch
+
+# Ensure src/ is importable when running outside Databricks notebooks
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
 from dataset.dataloader import DataLoader
 from managers.trainer import Trainer
 from managers.evaluator import Evaluator
 from utils import create_model, plot_tsne_embeddings
-import torch
-import mlflow.pytorch
 
 
-def main(config) -> None:
+def main() -> None:
     """
     Main entry point for the project
     """
@@ -26,10 +32,11 @@ def main(config) -> None:
         params = yaml.safe_load(config_file)
 
     # --------------------------------------------------------------------------
-    # Spark parameters and configuration
+    # Unity Catalog namespace
     # --------------------------------------------------------------------------
-    spark.sql(f"USE {params['database']}")
-    logging.info(f"Using {params['database']}")
+    spark.sql(f"USE CATALOG {params['catalog']}")
+    spark.sql(f"USE SCHEMA {params['schema']}")
+    logging.info(f"Using {params['catalog']}.{params['schema']}")
 
     # --------------------------------------------------------------------------
     # Create dataset as well as dataloaders for training, validation and testing
@@ -45,6 +52,8 @@ def main(config) -> None:
     # --------------------------------------------------------------------------
     # Start mlflow training run
     # --------------------------------------------------------------------------
+    mlflow.set_registry_uri("databricks-uc")
+
     with mlflow.start_run(run_name='GNN-BLOG-MODEL') as run:
         # Log the parameters of the model run
         mlflow.log_params(params)
@@ -55,7 +64,6 @@ def main(config) -> None:
         trainer = Trainer(params=params,
                           model=graph_model,
                           train_data_loader=data_loaders['training'],
-                          validation_data_loader=data_loaders['validation'],
                           training_graph=graph_partitions['training'])
         trained_model = trainer.train()
 
@@ -69,41 +77,21 @@ def main(config) -> None:
                                              batch_size=params['batch_size'],
                                              device=params['device'])
             )
-        plot_tsne_embeddings(graph_embeddings=training_graph_embeddings,
-                             chart_name='training_embeddings',
-                             save_fig=True)
+        fig = plot_tsne_embeddings(graph_embeddings=training_graph_embeddings,
+                                   chart_name='training_embeddings',
+                                   save_fig=True)
         mlflow.log_artifact('data/training_embeddings.png')
 
         # --------------------------------------------------------------------------
-        # Evaluate model accuracy
+        # Evaluate model accuracy on the testing split
         # --------------------------------------------------------------------------
         evaluator = Evaluator(params=params,
                               model=trained_model,
-                              testing_data_loader=data_loaders['validation'])
+                              testing_data_loader=data_loaders['testing'])
         auc_list, ap_list = evaluator.evaluate()
-
-
-        # mlflow.pytorch.log_model(self.model, "model")
-        # summary, _ = count_model_parameters(net)
-        # mlflow.log_text(str(summary), "model_summary.txt")
-        # mlflow.set_tracking_uri("http://localhost:5000")
-        # mlflow.pytorch.log_model(
-        #     pytorch_model=self.model,
-        #     artifact_path='mlruns:/0/{}/model'.format(run.info.run_id),
-        #     registered_model_name="GNN-BLOG-MODEL"
-        # )
-        # logging.info("Training and logging complete")
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("py4j").setLevel(logging.INFO)
-
-    parser = argparse.ArgumentParser(description='GNN Blog Post Run Arguments.')
-
-    # Parser arguments for run...
-    parser.add_argument("--notebook", type=bool, default='True',
-                        help="Is this being run from inside Databricks?")
-
-    run_args = parser.parse_args()
-    main(run_args)
+    main()

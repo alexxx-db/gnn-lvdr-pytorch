@@ -36,7 +36,7 @@ class Evaluator(object):
                     roc_auc_all.append(auc_pr_dicts['AUC'])
                     ap_all.append(auc_pr_dicts['AP'])
 
-            mlflow.log_param('validation_mean_roc', sum(roc_auc_all)/len(roc_auc_all))
-            mlflow.log_param('validation_mean_ap', sum(ap_all)/len(ap_all))
+            mlflow.log_metric('validation_mean_roc', sum(roc_auc_all)/len(roc_auc_all))
+            mlflow.log_metric('validation_mean_ap', sum(ap_all)/len(ap_all))
 
         return roc_auc_all, ap_all
