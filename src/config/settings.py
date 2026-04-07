@@ -15,6 +15,7 @@ _DEFAULTS = dict(
     catalog="gnn_hls_graphsage",
     schema="gnn_hls_graphsage_db",
     volume="gnn_data",
+    # Bundle targets append -{target} via variables.yml; this default is for interactive use
     experiment_name="/Shared/gnn-patient-recommendations",
     registered_model_name="patient_recommendations_gnn",
     app_name="gnn-patient-recommendations",
@@ -125,6 +126,9 @@ def load_config(overrides: Optional[dict] = None) -> ProjectConfig:
                 expected_type = type(getattr(cfg, k))
                 if expected_type is bool:
                     v = str(v).lower() in ("true", "1", "yes")
+                elif expected_type is list:
+                    # Skip list fields — they can't be safely coerced from strings
+                    continue
                 else:
                     v = expected_type(v)
                 setattr(cfg, k, v)

@@ -1,0 +1,21 @@
+# =============================================================================
+# GNN Patient Recommendations — Databricks Asset Bundle
+# =============================================================================
+#
+# Deploy: databricks bundle deploy -t dev
+# Run:    databricks bundle run -t dev gnn_patient_recommendations
+# Validate: databricks bundle validate -t dev
+#
+# See docs/bundle_deployment.md for full usage guide.
+# =============================================================================
+
+bundle:
+  name: gnn-patient-recommendations
+
+include:
+  - bundle/variables.yml
+  - bundle/targets.yml
+  - bundle/includes/*.yml
+
+workspace:
+  root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

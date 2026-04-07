@@ -1,0 +1,73 @@
+# =============================================================================
+# Bundle Variables — Single source of truth for all parameterized names
+# =============================================================================
+# Override per-target in targets.yml or at deploy time via:
+#   databricks bundle deploy -t dev --var="synthetic_scale=500"
+# =============================================================================
+
+variables:
+
+  # --- Unity Catalog namespace ---
+  catalog:
+    description: Unity Catalog catalog name
+    default: gnn_hls_graphsage
+
+  schema:
+    description: Unity Catalog schema name
+    default: gnn_hls_graphsage_db
+
+  volume:
+    description: Unity Catalog volume name for artifacts
+    default: gnn_data
+
+  # --- MLflow ---
+  experiment_name:
+    description: MLflow experiment path
+    default: /Shared/gnn-patient-recommendations-${bundle.target}
+
+  registered_model_name:
+    description: UC registered model name (unqualified)
+    default: patient_recommendations_gnn
+
+  # --- Databricks resources ---
+  app_name:
+    description: Databricks App name
+    default: gnn-patient-rec-${bundle.target}
+
+  job_name:
+    description: Workflow job name
+    default: gnn-patient-recommendations-${bundle.target}
+
+  serving_endpoint_name:
+    description: Model serving endpoint name
+    default: gnn-patient-rec-agent-${bundle.target}
+
+  # --- Data generation ---
+  synthetic_scale:
+    description: Number of synthetic patients to generate
+    default: "1000"
+
+  random_seed:
+    description: Random seed for reproducibility
+    default: "42"
+
+  rebuild_synthetic:
+    description: Whether to regenerate synthetic data
+    default: "true"
+
+  retrain_model:
+    description: Whether to retrain the GNN model
+    default: "true"
+
+  # --- Compute ---
+  spark_version:
+    description: Databricks Runtime version
+    default: 15.4.x-cpu-ml-scala2.12
+
+  node_type_id:
+    description: Worker node type
+    default: i3.xlarge
+
+  num_workers:
+    description: Number of workers (0 = single-node)
+    default: "0"

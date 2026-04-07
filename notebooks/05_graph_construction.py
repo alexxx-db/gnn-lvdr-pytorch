@@ -45,7 +45,6 @@ print(f"Care site features: {care_site_features.shape}")
 
 # DBTITLE 1,Build DGL graph
 from src.graph.datasets import build_homogeneous_graph
-import pickle
 
 graph, metadata = build_homogeneous_graph(
     edges_df=edges_df,

@@ -40,20 +40,21 @@ def compute_auc_ap(pos_score: torch.Tensor, neg_score: torch.Tensor) -> dict:
 
 def compute_loss(pos_score, neg_score, loss_type: str = "binary_cross_entropy"):
     """Compute training loss from positive/negative scores."""
-    sigmoid = Sigmoid()
-    pos_score_edge = sigmoid(pos_score)
-    neg_score_edge = sigmoid(neg_score)
-    n = pos_score_edge.shape[0]
+    n = pos_score.shape[0]
 
     if loss_type == "margin":
+        sigmoid = Sigmoid()
+        pos_prob = sigmoid(pos_score)
+        neg_prob = sigmoid(neg_score)
         return (
-            (neg_score_edge.view(n, -1) - pos_score_edge.view(n, -1) + 1)
+            (neg_prob.view(n, -1) - pos_prob.view(n, -1) + 1)
             .clamp(min=0)
             .mean()
         )
     else:  # binary_cross_entropy
-        scores = cat([pos_score_edge, neg_score_edge])
-        labels = cat([ones(pos_score_edge.shape[0]), zeros(neg_score_edge.shape[0])])
+        # Use raw logits — bce_with_logits applies sigmoid internally
+        scores = cat([pos_score, neg_score])
+        labels = cat([ones(pos_score.shape[0]), zeros(neg_score.shape[0])])
         scores = scores.view(len(scores), -1).mean(dim=1)
         return F.binary_cross_entropy_with_logits(scores, labels)
 

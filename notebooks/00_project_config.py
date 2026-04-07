@@ -5,7 +5,7 @@
 # MAGIC **Purpose:** Initialize and display the project configuration. All downstream
 # MAGIC notebooks import from this shared config rather than defining their own constants.
 # MAGIC
-# MAGIC **Inputs:** Widget overrides (optional)
+# MAGIC **Inputs:** Widget overrides (optional) — passed by bundle job parameters or manually
 # MAGIC **Outputs:** `cfg` object available for `%run` consumers
 # MAGIC **Upstream:** None (first notebook)
 # MAGIC **Downstream:** All other notebooks
@@ -13,8 +13,9 @@
 # COMMAND ----------
 
 # DBTITLE 1,Install project dependencies
-# MAGIC %pip install dgl dbldatagen gradio --quiet
-# MAGIC %restart_python
+# pip install is fast when packages are already present (no-op).
+# For job clusters, prefer installing via cluster libraries/init scripts instead.
+# MAGIC %pip install dgl dbldatagen --quiet --disable-pip-version-check
 
 # COMMAND ----------
 
@@ -28,10 +29,23 @@ dbutils.widgets.text("random_seed", "42", "Random Seed")
 
 # COMMAND ----------
 
-# DBTITLE 1,Build configuration object
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get().rsplit("/", 1)[0]), ".."))
+# DBTITLE 1,Configure sys.path for src/ imports
+import sys
+import os
 
+# Works for both Git folder execution and bundle-deployed notebooks.
+# The notebook is in notebooks/, so the repo root is one level up.
+_nb_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+_repo_root = "/Workspace" + _nb_path.rsplit("/", 2)[0] if "/notebooks/" in _nb_path else "/Workspace" + _nb_path.rsplit("/", 1)[0]
+
+# Also handle bundle deployment where files are synced to workspace root_path
+for candidate in [_repo_root, os.getcwd(), "/Workspace" + _nb_path.rsplit("/", 1)[0] + "/.."]:
+    if candidate not in sys.path:
+        sys.path.insert(0, candidate)
+
+# COMMAND ----------
+
+# DBTITLE 1,Build configuration object
 from src.config.settings import load_config
 
 cfg = load_config({

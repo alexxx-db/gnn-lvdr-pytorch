@@ -23,6 +23,13 @@ class GNNPyfuncWrapper(mlflow.pyfunc.PythonModel):
     Accepts a DataFrame with src_id and dst_id columns,
     constructs a DGL graph, and returns link prediction scores.
 
+    IMPORTANT: This wrapper constructs a fresh graph from the input edges and
+    assigns random node features because the pyfunc interface has no access to
+    the original feature tables. Scores from this wrapper reflect learned graph
+    *structure* patterns but lack real clinical feature signal. For production
+    inference with real features, use src.graph.inference.predict_patient_care_site_scores()
+    which operates on pre-computed embeddings from real feature vectors.
+
     Preserved from legacy GNNWrapper with modernized interface.
     """
 
@@ -39,6 +46,7 @@ class GNNPyfuncWrapper(mlflow.pyfunc.PythonModel):
         else:
             raise ValueError("Expected a pandas DataFrame with src_id and dst_id columns")
 
+        # Random features — structural scoring only; see docstring
         g.ndata["feature"] = torch.randn(
             g.num_nodes(), self.num_node_features
         )

@@ -36,3 +36,16 @@ def test_uc_model():
 def test_volume_path():
     cfg = ProjectConfig()
     assert cfg.volume_path == "/Volumes/gnn_hls_graphsage/gnn_hls_graphsage_db/gnn_data"
+
+
+def test_load_config_skips_list_fields():
+    """List fields should not be coerced from strings (would break)."""
+    cfg = load_config({"neighbor_sample_sizes": "8,8"})
+    # Should keep the default list, not try to coerce the string
+    assert cfg.neighbor_sample_sizes == [8, 8]
+
+
+def test_load_config_ignores_empty_and_none():
+    cfg = load_config({"catalog": "", "schema": None})
+    assert cfg.catalog == "gnn_hls_graphsage"  # unchanged
+    assert cfg.schema == "gnn_hls_graphsage_db"  # unchanged

@@ -3,8 +3,6 @@ Centralized table and resource naming conventions.
 
 All UC table names flow through here so nothing is scattered across notebooks.
 """
-from src.config.settings import ProjectConfig
-
 
 # ---------------------------------------------------------------------------
 # Delta table names (relative — call cfg.table(NAME) for fully qualified)

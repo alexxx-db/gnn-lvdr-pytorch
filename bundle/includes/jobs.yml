@@ -1,0 +1,175 @@
+# =============================================================================
+# Job Resources — End-to-end GNN Patient Recommendations workflow
+# =============================================================================
+
+resources:
+  jobs:
+    gnn_patient_recommendations:
+      name: ${var.job_name}
+      description: >
+        End-to-end GNN Patient Recommendations pipeline: synthetic data generation,
+        OMOP curation, graph construction, GraphSAGE training, evaluation,
+        batch recommendations, agent explanations, and validation.
+
+      tags:
+        project: gnn-patient-recommendations
+        bundle_target: ${bundle.target}
+
+      # -----------------------------------------------------------------------
+      # Shared job cluster — single-node ML runtime
+      # -----------------------------------------------------------------------
+      job_clusters:
+        - job_cluster_key: gnn_cluster
+          new_cluster:
+            spark_version: ${var.spark_version}
+            num_workers: ${var.num_workers}
+            node_type_id: ${var.node_type_id}
+            spark_conf:
+              spark.master: "local[*]"
+
+      # -----------------------------------------------------------------------
+      # Notebook parameters passed to all tasks
+      # -----------------------------------------------------------------------
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: synthetic_scale
+          default: ${var.synthetic_scale}
+        - name: rebuild_synthetic
+          default: ${var.rebuild_synthetic}
+        - name: retrain_model
+          default: ${var.retrain_model}
+        - name: random_seed
+          default: ${var.random_seed}
+
+      # -----------------------------------------------------------------------
+      # Task DAG — linear pipeline from setup through validation
+      # -----------------------------------------------------------------------
+      tasks:
+        - task_key: workspace_setup
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/01_workspace_setup.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: synthetic_omop_generation
+          depends_on:
+            - task_key: workspace_setup
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/02_synthetic_omop_generation.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              synthetic_scale: "{{job.parameters.synthetic_scale}}"
+              rebuild_synthetic: "{{job.parameters.rebuild_synthetic}}"
+              random_seed: "{{job.parameters.random_seed}}"
+
+        - task_key: synthetic_geospatial_generation
+          depends_on:
+            - task_key: synthetic_omop_generation
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/03_synthetic_geospatial_generation.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              synthetic_scale: "{{job.parameters.synthetic_scale}}"
+              rebuild_synthetic: "{{job.parameters.rebuild_synthetic}}"
+              random_seed: "{{job.parameters.random_seed}}"
+
+        - task_key: curate_omop_gold
+          depends_on:
+            - task_key: synthetic_geospatial_generation
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/04_curate_omop_gold.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: graph_construction
+          depends_on:
+            - task_key: curate_omop_gold
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/05_graph_construction.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: graphsage_training
+          depends_on:
+            - task_key: graph_construction
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/06_graphsage_training.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              retrain_model: "{{job.parameters.retrain_model}}"
+
+        - task_key: evaluation_and_mlflow
+          depends_on:
+            - task_key: graphsage_training
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/07_evaluation_and_mlflow.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              retrain_model: "{{job.parameters.retrain_model}}"
+
+        - task_key: batch_recommendations
+          depends_on:
+            - task_key: evaluation_and_mlflow
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/08_batch_recommendations.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: agent_bricks_setup
+          depends_on:
+            - task_key: batch_recommendations
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/09_agent_bricks_setup.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: agent_pipeline
+          depends_on:
+            - task_key: agent_bricks_setup
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/10_agent_pipeline.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: databricks_app_prep
+          depends_on:
+            - task_key: agent_pipeline
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/11_databricks_app_prep.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+
+        - task_key: validation_and_smoke_tests
+          depends_on:
+            - task_key: databricks_app_prep
+          job_cluster_key: gnn_cluster
+          notebook_task:
+            notebook_path: ./notebooks/12_validation_and_smoke_tests.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"

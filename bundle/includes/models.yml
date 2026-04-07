@@ -1,0 +1,17 @@
+# =============================================================================
+# Registered Model Resources (Unity Catalog)
+# =============================================================================
+
+resources:
+  registered_models:
+    gnn_model:
+      name: ${var.catalog}.${var.schema}.${var.registered_model_name}
+      description: >
+        GraphSAGE link prediction model for patient-to-care-site recommendations.
+        Two-layer SAGEConv encoder with MLP edge predictor.
+        Packaged as mlflow.pyfunc with src_id/dst_id input signature.
+      comment: Managed by Databricks Asset Bundles
+      grants:
+        - privileges:
+            - EXECUTE
+          principal: account users

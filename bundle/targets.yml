@@ -1,0 +1,50 @@
+# =============================================================================
+# Bundle Targets — Environment-specific overrides
+# =============================================================================
+# Usage:
+#   databricks bundle deploy -t dev
+#   databricks bundle deploy -t staging
+#   databricks bundle deploy -t prod
+# =============================================================================
+
+targets:
+
+  # ---------------------------------------------------------------------------
+  # DEV — Fast iteration, small data, single-node
+  # ---------------------------------------------------------------------------
+  dev:
+    default: true
+    mode: development
+    variables:
+      catalog: gnn_hls_graphsage_dev
+      schema: gnn_hls_graphsage_db
+      synthetic_scale: "500"
+      rebuild_synthetic: "true"
+      retrain_model: "true"
+
+  # ---------------------------------------------------------------------------
+  # STAGING — Medium scale, validation before prod
+  # ---------------------------------------------------------------------------
+  staging:
+    variables:
+      catalog: gnn_hls_graphsage_staging
+      schema: gnn_hls_graphsage_db
+      synthetic_scale: "5000"
+      rebuild_synthetic: "true"
+      retrain_model: "true"
+
+  # ---------------------------------------------------------------------------
+  # PROD — Full scale, production deployment
+  # ---------------------------------------------------------------------------
+  prod:
+    mode: production
+    variables:
+      catalog: gnn_hls_graphsage
+      schema: gnn_hls_graphsage_db
+      synthetic_scale: "10000"
+      rebuild_synthetic: "false"
+      retrain_model: "false"
+    # Production runs need explicit permissions
+    run_as:
+      # Override with a service principal for production
+      user_name: ${workspace.current_user.userName}

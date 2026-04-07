@@ -41,7 +41,7 @@ def get_patient_summary(spark: SparkSession, cfg: ProjectConfig,
         "age_bucket": person["age_bucket"],
         "visit_count": person["visit_count"],
         "condition_count": person["condition_count"],
-        "distinct_care_sites_visited": person["distinct_care_sites"],
+        "distinct_care_sites": person["distinct_care_sites"],
         "top_conditions": conditions["condition_source_value"].tolist(),
     }
 

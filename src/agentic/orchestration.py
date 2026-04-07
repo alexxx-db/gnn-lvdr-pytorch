@@ -94,7 +94,7 @@ def _format_explanation(patient, site, rec, distance, factors) -> str:
             f"The GNN model learned this connection from patterns in visit history, "
             f"condition profiles, and care-site utilization across "
             f"{patient.get('visit_count', '?')} visits to "
-            f"{patient.get('distinct_care_sites_visited', '?')} distinct sites."
+            f"{patient.get('distinct_care_sites', '?')} distinct sites."
         )
 
     return "\n".join(lines)

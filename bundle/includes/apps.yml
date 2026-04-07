@@ -1,0 +1,23 @@
+# =============================================================================
+# App Resources — Gradio-based patient recommendation frontend
+# =============================================================================
+
+resources:
+  apps:
+    gnn_patient_rec_app:
+      name: ${var.app_name}
+      description: >
+        Interactive Gradio frontend for exploring GNN-based patient-to-care-site
+        recommendations with agentic explainability. All data is synthetic.
+
+      source_code_path: ./src/app
+
+      config:
+        command:
+          - python
+          - gradio_app.py
+        env:
+          - name: APP_CATALOG
+            value: ${var.catalog}
+          - name: APP_SCHEMA
+            value: ${var.schema}

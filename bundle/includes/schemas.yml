@@ -1,0 +1,29 @@
+# =============================================================================
+# Unity Catalog Schema & Volume Resources
+# =============================================================================
+
+resources:
+  schemas:
+    gnn_schema:
+      name: ${var.schema}
+      catalog_name: ${var.catalog}
+      comment: >
+        GNN Patient Recommendations — synthetic OMOP data, graph features,
+        recommendation outputs, and agent explanations.
+      grants:
+        - privileges:
+            - USE_SCHEMA
+            - SELECT
+          principal: account users
+
+  volumes:
+    gnn_volume:
+      name: ${var.volume}
+      catalog_name: ${var.catalog}
+      schema_name: ${var.schema}
+      volume_type: MANAGED
+      comment: Artifacts for graph metadata, model checkpoints, and visualizations.
+      grants:
+        - privileges:
+            - READ_VOLUME
+          principal: account users

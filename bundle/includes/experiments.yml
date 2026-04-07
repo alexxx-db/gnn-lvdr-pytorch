@@ -1,0 +1,14 @@
+# =============================================================================
+# MLflow Experiment Resources
+# =============================================================================
+
+resources:
+  experiments:
+    gnn_experiment:
+      name: ${var.experiment_name}
+      description: >
+        GraphSAGE patient recommendation model training and evaluation.
+        Tracks training loss, AUC, AP, t-SNE visualizations, and model artifacts.
+      permissions:
+        - level: CAN_MANAGE
+          user_name: ${workspace.current_user.userName}
